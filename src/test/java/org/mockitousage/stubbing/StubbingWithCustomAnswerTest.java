@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.mockitousage.IMethods;
+import org.mockitousage.MethodsImpl;
 import org.mockitoutil.TestBase;
 
 public class StubbingWithCustomAnswerTest extends TestBase {
@@ -117,6 +118,31 @@ public class StubbingWithCustomAnswerTest extends TestBase {
                         });
 
         assertEquals("assertions passed", mock.simpleMethod("test"));
+    }
+
+    @Test
+    public void
+            given_spy_with_custom_answer_when_answer_reassigns_an_argument_then_real_method_is_called_with_assigned_argument() {
+        MethodsImpl methodsImpl =
+                new MethodsImpl() {
+                    @Override
+                    public String simpleMethod(String argument) {
+                        return argument;
+                    }
+                };
+
+        MethodsImpl spy = spy(methodsImpl);
+        doAnswer(
+                        invocation -> {
+                            Object[] arguments = invocation.getArguments();
+                            arguments[0] = "from answer";
+                            Object o = invocation.callRealMethod();
+                            return o;
+                        })
+                .when(spy)
+                .simpleMethod(anyString());
+
+        assertEquals("from answer", spy.simpleMethod("should be overwritten"));
     }
 
     private static class RecordCall implements Answer<Object> {
