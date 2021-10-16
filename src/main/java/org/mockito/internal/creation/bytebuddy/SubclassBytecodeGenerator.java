@@ -42,7 +42,9 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
 import net.bytebuddy.dynamic.scaffold.TypeValidation;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.Implementation;
+import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.attribute.MethodAttributeAppender;
+import net.bytebuddy.implementation.bind.annotation.Morph;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.mockito.codegen.InjectionBase;
 import org.mockito.exceptions.base.MockitoException;
@@ -61,7 +63,11 @@ class SubclassBytecodeGenerator implements BytecodeGenerator {
     private final Implementation readReplace;
     private final ElementMatcher<? super MethodDescription> matcher;
 
-    private final Implementation dispatcher = to(DispatcherDefaultingToRealMethod.class);
+    private final Implementation dispatcher =
+            MethodDelegation.withDefaultConfiguration()
+                    .withBinders(
+                            Morph.Binder.install(DispatcherDefaultingToRealMethod.Morphable.class))
+                    .to(DispatcherDefaultingToRealMethod.class);
     private final Implementation hashCode = to(MockMethodInterceptor.ForHashCode.class);
     private final Implementation equals = to(MockMethodInterceptor.ForEquals.class);
     private final Implementation writeReplace = to(MockMethodInterceptor.ForWriteReplace.class);

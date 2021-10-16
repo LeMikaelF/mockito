@@ -17,6 +17,7 @@ import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.Argument;
 import net.bytebuddy.implementation.bind.annotation.BindingPriority;
 import net.bytebuddy.implementation.bind.annotation.FieldValue;
+import net.bytebuddy.implementation.bind.annotation.Morph;
 import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import net.bytebuddy.implementation.bind.annotation.StubValue;
@@ -131,6 +132,58 @@ public class MockMethodInterceptor implements Serializable {
 
         @SuppressWarnings("unused")
         @RuntimeType
+        @BindingPriority(BindingPriority.DEFAULT * 4)
+        public static Object interceptSuperCallableAndDefaultMethod(
+                @This Object mock,
+                @FieldValue("mockitoInterceptor") MockMethodInterceptor interceptor,
+                @Origin Method invokedMethod,
+                @AllArguments Object[] arguments,
+                @Morph(serializableProxy = true, defaultMethod = true) Morphable morph)
+                throws Throwable {
+            if (interceptor == null) {
+                return morph.call(arguments);
+            }
+            return interceptor.doIntercept(
+                    mock,
+                    invokedMethod,
+                    arguments,
+                    new RealMethod.FromCallable(
+                            new SerializableCallable() {
+                                @Override
+                                public Object call() throws Exception {
+                                    return morph.call(arguments);
+                                }
+                            }));
+        }
+
+        @SuppressWarnings("unused")
+        @RuntimeType
+        @BindingPriority(BindingPriority.DEFAULT * 3)
+        public static Object interceptSuperCallable(
+                @This Object mock,
+                @FieldValue("mockitoInterceptor") MockMethodInterceptor interceptor,
+                @Origin Method invokedMethod,
+                @AllArguments Object[] arguments,
+                @Morph(serializableProxy = true) Morphable morph)
+                throws Throwable {
+            if (interceptor == null) {
+                return morph.call(arguments);
+            }
+            return interceptor.doIntercept(
+                    mock,
+                    invokedMethod,
+                    arguments,
+                    new RealMethod.FromCallable(
+                            new SerializableCallable() {
+                                @Override
+                                public Object call() throws Exception {
+                                    return morph.call(arguments);
+                                }
+                            }));
+        }
+
+        @SuppressWarnings("unused")
+        @RuntimeType
         @BindingPriority(BindingPriority.DEFAULT * 2)
         public static Object interceptSuperCallable(
                 @This Object mock,
@@ -161,5 +214,11 @@ public class MockMethodInterceptor implements Serializable {
             return interceptor.doIntercept(
                     mock, invokedMethod, arguments, RealMethod.IsIllegal.INSTANCE);
         }
+
+        public interface Morphable {
+            Object call(Object[] args);
+        }
+
+        interface SerializableCallable extends Callable, Serializable {}
     }
 }
