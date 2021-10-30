@@ -132,8 +132,8 @@ public class MockMethodInterceptor implements Serializable {
 
         @SuppressWarnings("unused")
         @RuntimeType
-        @BindingPriority(BindingPriority.DEFAULT * 4)
-        public static Object interceptSuperCallableAndDefaultMethod(
+        @BindingPriority(4)
+        public static Object interceptSuperDefaultMethod(
                 @This Object mock,
                 @FieldValue("mockitoInterceptor") MockMethodInterceptor interceptor,
                 @Origin Method invokedMethod,
@@ -158,7 +158,7 @@ public class MockMethodInterceptor implements Serializable {
 
         @SuppressWarnings("unused")
         @RuntimeType
-        @BindingPriority(BindingPriority.DEFAULT * 3)
+        @BindingPriority(3)
         public static Object interceptSuperCallable(
                 @This Object mock,
                 @FieldValue("mockitoInterceptor") MockMethodInterceptor interceptor,
@@ -181,26 +181,27 @@ public class MockMethodInterceptor implements Serializable {
                                 }
                             }));
         }
+//
+//        @SuppressWarnings("unused")
+//        @RuntimeType
+//        @BindingPriority(2)
+//        public static Object interceptSuperCallable(
+//                @This Object mock,
+//                @FieldValue("mockitoInterceptor") MockMethodInterceptor interceptor,
+//                @Origin Method invokedMethod,
+//                @AllArguments Object[] arguments,
+//                @SuperCall(serializableProxy = true) Callable<?> superCall)
+//                throws Throwable {
+//            if (interceptor == null) {
+//                return superCall.call();
+//            }
+//            return interceptor.doIntercept(
+//                    mock, invokedMethod, arguments, new RealMethod.FromCallable(superCall));
+//        }
 
         @SuppressWarnings("unused")
         @RuntimeType
-        @BindingPriority(BindingPriority.DEFAULT * 2)
-        public static Object interceptSuperCallable(
-                @This Object mock,
-                @FieldValue("mockitoInterceptor") MockMethodInterceptor interceptor,
-                @Origin Method invokedMethod,
-                @AllArguments Object[] arguments,
-                @SuperCall(serializableProxy = true) Callable<?> superCall)
-                throws Throwable {
-            if (interceptor == null) {
-                return superCall.call();
-            }
-            return interceptor.doIntercept(
-                    mock, invokedMethod, arguments, new RealMethod.FromCallable(superCall));
-        }
-
-        @SuppressWarnings("unused")
-        @RuntimeType
+        @BindingPriority(1)
         public static Object interceptAbstract(
                 @This Object mock,
                 @FieldValue("mockitoInterceptor") MockMethodInterceptor interceptor,
