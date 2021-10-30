@@ -4,7 +4,12 @@
  */
 package org.mockito.internal.creation.bytebuddy;
 
-import static org.mockito.internal.invocation.DefaultInvocationFactory.createInvocation;
+import net.bytebuddy.implementation.bind.annotation.*;
+import org.mockito.internal.debugging.LocationImpl;
+import org.mockito.internal.invocation.RealMethod;
+import org.mockito.invocation.Location;
+import org.mockito.invocation.MockHandler;
+import org.mockito.mock.MockCreationSettings;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -13,21 +18,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 
-import net.bytebuddy.implementation.bind.annotation.AllArguments;
-import net.bytebuddy.implementation.bind.annotation.Argument;
-import net.bytebuddy.implementation.bind.annotation.BindingPriority;
-import net.bytebuddy.implementation.bind.annotation.FieldValue;
-import net.bytebuddy.implementation.bind.annotation.Morph;
-import net.bytebuddy.implementation.bind.annotation.Origin;
-import net.bytebuddy.implementation.bind.annotation.RuntimeType;
-import net.bytebuddy.implementation.bind.annotation.StubValue;
-import net.bytebuddy.implementation.bind.annotation.SuperCall;
-import net.bytebuddy.implementation.bind.annotation.This;
-import org.mockito.internal.debugging.LocationImpl;
-import org.mockito.internal.invocation.RealMethod;
-import org.mockito.invocation.Location;
-import org.mockito.invocation.MockHandler;
-import org.mockito.mock.MockCreationSettings;
+import static org.mockito.internal.invocation.DefaultInvocationFactory.createInvocation;
 
 public class MockMethodInterceptor implements Serializable {
 
