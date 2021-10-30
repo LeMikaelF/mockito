@@ -123,7 +123,7 @@ public class MockMethodInterceptor implements Serializable {
 
         @SuppressWarnings("unused")
         @RuntimeType
-        @BindingPriority(4)
+        @BindingPriority(3)
         public static Object interceptSuperDefaultMethod(
                 @This Object mock,
                 @FieldValue("mockitoInterceptor") MockMethodInterceptor interceptor,
@@ -131,26 +131,23 @@ public class MockMethodInterceptor implements Serializable {
                 @AllArguments Object[] arguments,
                 @Morph(serializableProxy = true, defaultMethod = true) Morphable morph)
                 throws Throwable {
-            if (interceptor == null) {
-                return morph.call(arguments);
-            }
-            return interceptor.doIntercept(
-                    mock,
-                    invokedMethod,
-                    arguments,
-                    new RealMethod.FromCallable(
-                            new SerializableCallable() {
-                                @Override
-                                public Object call() throws Exception {
-                                    return morph.call(arguments);
-                                }
-                            }));
+            return doInterceptSuper(mock, interceptor, invokedMethod, arguments, morph);
         }
 
         @SuppressWarnings("unused")
         @RuntimeType
-        @BindingPriority(3)
-        public static Object interceptSuperCallable(
+        @BindingPriority(2)
+        public static Object interceptSuper(
+                @This Object mock,
+                @FieldValue("mockitoInterceptor") MockMethodInterceptor interceptor,
+                @Origin Method invokedMethod,
+                @AllArguments Object[] arguments,
+                @Morph(serializableProxy = true) Morphable morph)
+                throws Throwable {
+            return doInterceptSuper(mock, interceptor, invokedMethod, arguments, morph);
+        }
+
+        private static Object doInterceptSuper(
                 @This Object mock,
                 @FieldValue("mockitoInterceptor") MockMethodInterceptor interceptor,
                 @Origin Method invokedMethod,
@@ -172,24 +169,6 @@ public class MockMethodInterceptor implements Serializable {
                                 }
                             }));
         }
-        //
-        //        @SuppressWarnings("unused")
-        //        @RuntimeType
-        //        @BindingPriority(2)
-        //        public static Object interceptSuperCallable(
-        //                @This Object mock,
-        //                @FieldValue("mockitoInterceptor") MockMethodInterceptor interceptor,
-        //                @Origin Method invokedMethod,
-        //                @AllArguments Object[] arguments,
-        //                @SuperCall(serializableProxy = true) Callable<?> superCall)
-        //                throws Throwable {
-        //            if (interceptor == null) {
-        //                return superCall.call();
-        //            }
-        //            return interceptor.doIntercept(
-        //                    mock, invokedMethod, arguments, new
-        // RealMethod.FromCallable(superCall));
-        //        }
 
         @SuppressWarnings("unused")
         @RuntimeType
