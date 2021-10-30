@@ -139,7 +139,7 @@ public class InterceptedInvocation implements Invocation, VerificationAwareInvoc
         if (!realMethod.isInvokable()) {
             throw cannotCallAbstractRealMethod();
         }
-        return realMethod.invoke();
+        return realMethod.invoke(); //FIXME c'est ici qu'il faudrait passer les arguments idéalement
     }
 
     /**

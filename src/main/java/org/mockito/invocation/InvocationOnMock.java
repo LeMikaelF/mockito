@@ -33,9 +33,9 @@ public interface InvocationOnMock extends Serializable {
     Method getMethod();
 
     /**
-     * Returns arguments passed to the method.
+     * Returns arguments passed to the method. Changes to this array will be reflected in {@link #callRealMethod()} and in verifications.
      *
-     * Vararg are expanded in this array.
+     * Vararg are expanded in the array.
      *
      * @return arguments
      */

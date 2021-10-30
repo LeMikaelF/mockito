@@ -4,7 +4,15 @@
  */
 package org.mockito.internal.creation.bytebuddy;
 
-import net.bytebuddy.implementation.bind.annotation.*;
+import net.bytebuddy.implementation.bind.annotation.AllArguments;
+import net.bytebuddy.implementation.bind.annotation.Argument;
+import net.bytebuddy.implementation.bind.annotation.BindingPriority;
+import net.bytebuddy.implementation.bind.annotation.FieldValue;
+import net.bytebuddy.implementation.bind.annotation.Morph;
+import net.bytebuddy.implementation.bind.annotation.Origin;
+import net.bytebuddy.implementation.bind.annotation.RuntimeType;
+import net.bytebuddy.implementation.bind.annotation.StubValue;
+import net.bytebuddy.implementation.bind.annotation.This;
 import org.mockito.internal.debugging.LocationImpl;
 import org.mockito.internal.invocation.RealMethod;
 import org.mockito.invocation.Location;
@@ -75,7 +83,7 @@ public class MockMethodInterceptor implements Serializable {
                     createInvocation(
                             mock,
                             invokedMethod,
-                            arguments,
+                            arguments, //TODO ici, on a encore le bon array.
                             realMethod,
                             mockCreationSettings,
                             location));
@@ -165,7 +173,7 @@ public class MockMethodInterceptor implements Serializable {
                             new SerializableCallable() {
                                 @Override
                                 public Object call() throws Exception {
-                                    return morph.call(arguments);
+                                    return morph.call(arguments); //TODO ici
                                 }
                             }));
         }
@@ -191,6 +199,6 @@ public class MockMethodInterceptor implements Serializable {
             Object call(Object[] args);
         }
 
-        interface SerializableCallable extends Callable, Serializable {}
+        interface SerializableCallable extends Callable<Object>, Serializable {}
     }
 }

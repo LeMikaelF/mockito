@@ -64,10 +64,7 @@ class SubclassBytecodeGenerator implements BytecodeGenerator {
     private final ElementMatcher<? super MethodDescription> matcher;
 
     private final Implementation dispatcher =
-            MethodDelegation.withDefaultConfiguration()
-                    .withBinders(
-                            Morph.Binder.install(DispatcherDefaultingToRealMethod.Morphable.class))
-                    .to(DispatcherDefaultingToRealMethod.class);
+            withMorphBinder().to(DispatcherDefaultingToRealMethod.class);
     private final Implementation hashCode = to(MockMethodInterceptor.ForHashCode.class);
     private final Implementation equals = to(MockMethodInterceptor.ForEquals.class);
     private final Implementation writeReplace = to(MockMethodInterceptor.ForWriteReplace.class);
@@ -95,6 +92,12 @@ class SubclassBytecodeGenerator implements BytecodeGenerator {
         byteBuddy = new ByteBuddy().with(TypeValidation.DISABLED);
         random = new Random();
         handler = ModuleHandler.make(byteBuddy, loader, random);
+    }
+
+    private MethodDelegation.WithCustomProperties withMorphBinder() {
+        return MethodDelegation.withDefaultConfiguration()
+            .withBinders(
+                Morph.Binder.install(DispatcherDefaultingToRealMethod.Morphable.class));
     }
 
     private static boolean needsSamePackageClassLoader(MockFeatures<?> features) {

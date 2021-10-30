@@ -46,7 +46,7 @@ public final class ArgumentsProcessor {
         final int varArgsCount = varArgs.length;
         Object[] newArgs = new Object[nonVarArgsCount + varArgsCount];
         System.arraycopy(args, 0, newArgs, 0, nonVarArgsCount);
-        System.arraycopy(varArgs, 0, newArgs, nonVarArgsCount, varArgsCount);
+        System.arraycopy(varArgs, 0, newArgs, nonVarArgsCount, varArgsCount); //FIXME c'est ici le problème, ma solution de fonctionnera pas.
         return newArgs;
     }
 
