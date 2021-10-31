@@ -74,7 +74,7 @@ public final class ArgumentsProcessor {
             return expandedArgs;
         }
 
-        int nParams = method.getParameterCount();
+        int nParams = method.getParameterTypes().length;
 
         if (expandedArgs.length == nParams) {
             int length = expandedArgs.length;
