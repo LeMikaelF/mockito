@@ -66,6 +66,8 @@ public final class ArgumentsProcessor {
         return matchers;
     }
 
+    private ArgumentsProcessor() {}
+
     public static Object[] contractArgs(int nParams, Object[] expandedArgs) {
         if (expandedArgs == null || expandedArgs.length <= nParams) {
             return expandedArgs;
