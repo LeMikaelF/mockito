@@ -7,6 +7,7 @@ package org.mockito.internal.invocation;
 import org.mockito.internal.creation.bytebuddy.MockMethodInterceptor;
 
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 
@@ -15,11 +16,11 @@ public interface RealMethodFactory extends Serializable {
     class FromMorphable implements RealMethodFactory {
 
         private final SerializableMorphable morphable;
-        private final Object[] args;
+        private final Method method;
 
         public FromMorphable(
                 MockMethodInterceptor.DispatcherDefaultingToRealMethod.Morphable morphable,
-                Object[] args) {
+                Method method) {
             this.morphable =
                     new SerializableMorphable() {
                         @Override
@@ -27,7 +28,7 @@ public interface RealMethodFactory extends Serializable {
                             return morphable.call(args1);
                         }
                     };
-            this.args = args;
+            this.method = method;
         }
 
         @Override
@@ -36,9 +37,7 @@ public interface RealMethodFactory extends Serializable {
                     new SerializableCallable() {
                         @Override
                         public Object call() throws Exception {
-                            Object[] contractedArgs =
-                                    ArgumentsProcessor.contractArgs(
-                                            FromMorphable.this.args.length, args);
+                            Object[] contractedArgs = ArgumentsProcessor.contractArgs(method, args);
                             return morphable.apply(contractedArgs);
                         }
                     });

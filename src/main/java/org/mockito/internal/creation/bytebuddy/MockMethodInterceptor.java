@@ -206,7 +206,7 @@ public class MockMethodInterceptor implements Serializable {
                     mock,
                     invokedMethod,
                     arguments,
-                    new RealMethodFactory.FromMorphable(morph, arguments));
+                    new RealMethodFactory.FromMorphable(morph, invokedMethod));
         }
 
         @SuppressWarnings("unused")

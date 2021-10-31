@@ -4,6 +4,7 @@
  */
 package org.mockito.internal.invocation;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -68,9 +69,29 @@ public final class ArgumentsProcessor {
 
     private ArgumentsProcessor() {}
 
-    public static Object[] contractArgs(int nParams, Object[] expandedArgs) {
-        if (expandedArgs == null || expandedArgs.length <= nParams) {
+    public static Object[] contractArgs(Method method, Object[] expandedArgs) {
+        if (!method.isVarArgs() || expandedArgs == null) {
             return expandedArgs;
+        }
+
+        int nParams = method.getParameterCount();
+
+        if (expandedArgs.length == nParams) {
+            int length = expandedArgs.length;
+
+            Object[] contractedArgs = new Object[length];
+            System.arraycopy(expandedArgs, 0, contractedArgs, 0, length - 1);
+            contractedArgs[length - 1] = new Object[] {expandedArgs[length - 1]};
+        }
+
+        if (expandedArgs.length < nParams) { // no varargs
+            int length = nParams;
+
+            Object[] contractedArgs = new Object[length];
+            System.arraycopy(expandedArgs, 0, contractedArgs, 0, length - 1);
+            contractedArgs[length - 1] = new Object[0];
+
+            return contractedArgs;
         }
 
         Object[] argsWithVarArgs = Arrays.copyOf(expandedArgs, nParams);
