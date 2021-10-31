@@ -96,8 +96,8 @@ class SubclassBytecodeGenerator implements BytecodeGenerator {
 
     private MethodDelegation.WithCustomProperties withMorphBinder() {
         return MethodDelegation.withDefaultConfiguration()
-            .withBinders(
-                Morph.Binder.install(DispatcherDefaultingToRealMethod.Morphable.class));
+                .withBinders(
+                        Morph.Binder.install(DispatcherDefaultingToRealMethod.Morphable.class));
     }
 
     private static boolean needsSamePackageClassLoader(MockFeatures<?> features) {

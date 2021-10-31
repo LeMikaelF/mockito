@@ -14,7 +14,10 @@ import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import net.bytebuddy.implementation.bind.annotation.StubValue;
 import net.bytebuddy.implementation.bind.annotation.This;
 import org.mockito.internal.debugging.LocationImpl;
+import org.mockito.internal.invocation.DefaultInvocationFactory;
 import org.mockito.internal.invocation.RealMethod;
+import org.mockito.internal.invocation.RealMethodFactory;
+import org.mockito.invocation.Invocation;
 import org.mockito.invocation.Location;
 import org.mockito.invocation.MockHandler;
 import org.mockito.mock.MockCreationSettings;
@@ -24,7 +27,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 import static org.mockito.internal.invocation.DefaultInvocationFactory.createInvocation;
 
@@ -60,9 +63,50 @@ public class MockMethodInterceptor implements Serializable {
             Object mock,
             Method invokedMethod,
             Object[] arguments,
+            RealMethodFactory realMethodFactory)
+            throws Throwable {
+        return doIntercept(mock, invokedMethod, arguments, realMethodFactory, new LocationImpl());
+    }
+
+    Object doIntercept(
+            Object mock,
+            Method invokedMethod,
+            Object[] arguments,
             RealMethod realMethod,
             Location location)
             throws Throwable {
+        return doWithReferenceHatch(
+                mock,
+                () ->
+                        createInvocation(
+                                mock,
+                                invokedMethod,
+                                arguments,
+                                realMethod,
+                                mockCreationSettings,
+                                location));
+    }
+
+    Object doIntercept(
+            Object mock,
+            Method invokedMethod,
+            Object[] arguments,
+            RealMethodFactory realMethodFactory,
+            Location location)
+            throws Throwable {
+        return doWithReferenceHatch(
+                mock,
+                () ->
+                        DefaultInvocationFactory.createInvocation(
+                                mock,
+                                invokedMethod,
+                                arguments,
+                                realMethodFactory,
+                                mockCreationSettings,
+                                location));
+    }
+
+    private Object doWithReferenceHatch(Object mock, Supplier<Invocation> action) throws Throwable {
         // If the currently dispatched method is used in a hot path, typically a tight loop and if
         // the mock is not used after the currently dispatched method, the JVM might attempt a
         // garbage collection of the mock instance even before the execution of the current
@@ -79,14 +123,7 @@ public class MockMethodInterceptor implements Serializable {
         // https://docs.oracle.com/javase/9/docs/api/java/lang/ref/Reference.html#reachabilityFence-java.lang.Object-
         weakReferenceHatch.set(mock);
         try {
-            return handler.handle(
-                    createInvocation(
-                            mock,
-                            invokedMethod,
-                            arguments, //TODO ici, on a encore le bon array.
-                            realMethod,
-                            mockCreationSettings,
-                            location));
+            return handler.handle(action.get());
         } finally {
             weakReferenceHatch.remove();
         }
@@ -169,13 +206,7 @@ public class MockMethodInterceptor implements Serializable {
                     mock,
                     invokedMethod,
                     arguments,
-                    new RealMethod.FromCallable(
-                            new SerializableCallable() {
-                                @Override
-                                public Object call() throws Exception {
-                                    return morph.call(arguments); //TODO ici
-                                }
-                            }));
+                    new RealMethodFactory.FromMorphable(morph, arguments));
         }
 
         @SuppressWarnings("unused")
@@ -198,7 +229,5 @@ public class MockMethodInterceptor implements Serializable {
         public interface Morphable {
             Object call(Object[] args);
         }
-
-        interface SerializableCallable extends Callable<Object>, Serializable {}
     }
 }

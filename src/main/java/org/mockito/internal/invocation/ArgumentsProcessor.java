@@ -46,7 +46,12 @@ public final class ArgumentsProcessor {
         final int varArgsCount = varArgs.length;
         Object[] newArgs = new Object[nonVarArgsCount + varArgsCount];
         System.arraycopy(args, 0, newArgs, 0, nonVarArgsCount);
-        System.arraycopy(varArgs, 0, newArgs, nonVarArgsCount, varArgsCount); //FIXME c'est ici le problème, ma solution de fonctionnera pas.
+        System.arraycopy(
+                varArgs,
+                0,
+                newArgs,
+                nonVarArgsCount,
+                varArgsCount); // FIXME c'est ici le problème, ma solution de fonctionnera pas.
         return newArgs;
     }
 
@@ -66,5 +71,25 @@ public final class ArgumentsProcessor {
         return matchers;
     }
 
-    private ArgumentsProcessor() {}
+    public static Object[] contractArgs(int nParams, Object[] expandedArgs) {
+        if (expandedArgs == null || expandedArgs.length <= nParams) {
+            return expandedArgs;
+        }
+
+        Object[] argsWithVarArgs = Arrays.copyOf(expandedArgs, nParams);
+
+        int nonVarArgsCount = expandedArgs.length - nParams;
+        Object[] varArgsArray = new Object[expandedArgs.length - nonVarArgsCount];
+
+        System.arraycopy(
+                expandedArgs,
+                nonVarArgsCount,
+                varArgsArray,
+                0,
+                expandedArgs.length - nonVarArgsCount);
+
+        argsWithVarArgs[argsWithVarArgs.length - 1] = varArgsArray;
+
+        return argsWithVarArgs;
+    }
 }

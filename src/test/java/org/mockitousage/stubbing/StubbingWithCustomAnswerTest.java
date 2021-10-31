@@ -123,7 +123,7 @@ public class StubbingWithCustomAnswerTest extends TestBase {
     @Test
     public void
             given_spy_with_custom_answer__when_answer_reassigns_an_argument__then_real_method_is_called_with_assigned_argument() {
-        //given
+        // given
         MethodsImpl methodsImpl =
                 new MethodsImpl() {
                     @Override
@@ -142,46 +142,46 @@ public class StubbingWithCustomAnswerTest extends TestBase {
                 .when(spy)
                 .simpleMethod(anyString());
 
-        //when
+        // when
         String result = spy.simpleMethod("should be overwritten");
 
-        //then
+        // then
         assertEquals("from answer", result);
         verify(spy).simpleMethod("from answer");
     }
 
     @Test
     public void
-    given_spy_with_custom_answer_and_varargs___when_answer_reassigns_arguments__then_real_method_is_called_with_assigned_arguments() {
-        //given
+            given_spy_with_custom_answer_and_varargs___when_answer_reassigns_arguments__then_real_method_is_called_with_assigned_arguments() {
+        // given
         MethodsImpl methodsImpl =
-            new MethodsImpl() {
-                @Override
-                public Object varargsObject(int i, Object... object) {
-                    Object[] retVal = new Object[object.length + 1];
-                    retVal[0] = i;
-                    System.arraycopy(object, 0, retVal, 1, object.length);
-                    return retVal;
-                }
-            };
+                new MethodsImpl() {
+                    @Override
+                    public Object varargsObject(int i, Object... object) {
+                        Object[] retVal = new Object[object.length + 1];
+                        retVal[0] = i;
+                        System.arraycopy(object, 0, retVal, 1, object.length);
+                        return retVal;
+                    }
+                };
         MethodsImpl spy = spy(methodsImpl);
 
         doAnswer(
-            invocation -> {
-                Object[] arguments = invocation.getArguments();
-                arguments[0] = 1;
-                arguments[1] = "from answer 1"; //FIXME ByteBuddy crée un array pour regrouper les varargs, donc ça ne marche pas.
-                arguments[2] = 20;
-                return invocation.callRealMethod();
-            })
-            .when(spy)
-            .varargsObject(anyInt(), any());
+                        invocation -> {
+                            Object[] arguments = invocation.getArguments();
+                            arguments[0] = 1;
+                            arguments[1] = "from answer 1";
+                            arguments[2] = 20;
+                            return invocation.callRealMethod();
+                        })
+                .when(spy)
+                .varargsObject(anyInt(), any());
 
-        //when
+        // when
         Object[] result = (Object[]) spy.varargsObject(0, "argument 1", 10);
 
-        //then
-        assertArrayEquals(new Object[]{1, "from answer 1", 20}, result);
+        // then
+        assertArrayEquals(new Object[] {1, "from answer 1", 20}, result);
         verify(spy).varargsObject(1, "from answer 1", 20);
     }
 

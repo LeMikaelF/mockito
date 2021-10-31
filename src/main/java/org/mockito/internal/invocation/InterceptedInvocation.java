@@ -53,6 +53,23 @@ public class InterceptedInvocation implements Invocation, VerificationAwareInvoc
         this.sequenceNumber = sequenceNumber;
     }
 
+    public InterceptedInvocation(
+            MockReference<Object> mockRef,
+            MockitoMethod mockitoMethod,
+            Object[] expandedArgs,
+            Object[] rawArguments,
+            RealMethod realMethod,
+            int sequenceNumber,
+            Location location) {
+        this.mockRef = mockRef;
+        this.mockitoMethod = mockitoMethod;
+        this.arguments = expandedArgs;
+        this.rawArguments = rawArguments;
+        this.realMethod = realMethod;
+        this.sequenceNumber = sequenceNumber;
+        this.location = location;
+    }
+
     @Override
     public boolean isVerified() {
         return verified || isIgnoredForVerification;
@@ -139,7 +156,8 @@ public class InterceptedInvocation implements Invocation, VerificationAwareInvoc
         if (!realMethod.isInvokable()) {
             throw cannotCallAbstractRealMethod();
         }
-        return realMethod.invoke(); //FIXME c'est ici qu'il faudrait passer les arguments idéalement
+        return realMethod
+                .invoke(); // FIXME c'est ici qu'il faudrait passer les arguments idéalement
     }
 
     /**

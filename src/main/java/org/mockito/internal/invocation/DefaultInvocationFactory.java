@@ -74,6 +74,22 @@ public class DefaultInvocationFactory implements InvocationFactory {
                 mock, invokedMethod, arguments, realMethod, settings, new LocationImpl());
     }
 
+    public static InterceptedInvocation createInvocation(
+            Object mock,
+            Method invokedMethod,
+            Object[] arguments,
+            RealMethodFactory realMethodFactory,
+            MockCreationSettings mockCreationSettings,
+            Location location) {
+        return ArgumentAwareInterceptedInvocation.of(
+                new MockWeakReference<>(mock),
+                createMockitoMethod(invokedMethod, mockCreationSettings),
+                arguments,
+                realMethodFactory,
+                location,
+                SequenceNumber.next());
+    }
+
     private static MockitoMethod createMockitoMethod(Method method, MockCreationSettings settings) {
         if (settings.isSerializable()) {
             return new SerializableMethod(method);
