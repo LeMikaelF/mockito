@@ -20,7 +20,13 @@ public interface RealMethodFactory extends Serializable {
         public FromMorphable(
                 MockMethodInterceptor.DispatcherDefaultingToRealMethod.Morphable morphable,
                 Object[] args) {
-            this.morphable = morphable::call;
+            this.morphable =
+                    new SerializableMorphable() {
+                        @Override
+                        public Object apply(Object[] args1) {
+                            return morphable.call(args1);
+                        }
+                    };
             this.args = args;
         }
 
