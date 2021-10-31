@@ -8,18 +8,19 @@ import org.mockito.internal.creation.bytebuddy.MockMethodInterceptor;
 
 import java.io.Serializable;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
 
-public interface RealMethodFactory {
+public interface RealMethodFactory extends Serializable {
 
     class FromMorphable implements RealMethodFactory {
 
-        private final MockMethodInterceptor.DispatcherDefaultingToRealMethod.Morphable morphable;
+        private final SerializableMorphable morphable;
         private final Object[] args;
 
         public FromMorphable(
                 MockMethodInterceptor.DispatcherDefaultingToRealMethod.Morphable morphable,
                 Object[] args) {
-            this.morphable = morphable;
+            this.morphable = morphable::call;
             this.args = args;
         }
 
@@ -32,7 +33,7 @@ public interface RealMethodFactory {
                             Object[] contractedArgs =
                                     ArgumentsProcessor.contractArgs(
                                             FromMorphable.this.args.length, args);
-                            return morphable.call(contractedArgs);
+                            return morphable.apply(contractedArgs);
                         }
                     });
         }
@@ -41,4 +42,7 @@ public interface RealMethodFactory {
     RealMethod create(Object[] args);
 
     interface SerializableCallable extends Callable<Object>, Serializable {}
+
+    interface SerializableMorphable
+            extends Function<Object[], Object>, Serializable {} // TODO nécessaire?
 }
