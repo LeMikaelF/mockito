@@ -157,7 +157,9 @@ public class ProxyMockMaker implements MockMaker {
                                     proxy,
                                     method,
                                     new ArgumentsProcessor(
-                                            args, method.getParameterCount(), method.isVarArgs()),
+                                            args,
+                                            method.getParameterTypes().length,
+                                            method.isVarArgs()),
                                     realMethod,
                                     settings,
                                     new LocationImpl()));

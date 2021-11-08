@@ -155,7 +155,7 @@ public class MockMethodInterceptor implements Serializable {
             ArgumentsProcessor argumentsProcessor =
                     new ArgumentsProcessor(
                             arguments,
-                            invokedMethod.getParameterCount(),
+                            invokedMethod.getParameterTypes().length,
                             invokedMethod.isVarArgs());
             return interceptor.doIntercept(
                     mock,
@@ -182,7 +182,7 @@ public class MockMethodInterceptor implements Serializable {
                     invokedMethod,
                     new ArgumentsProcessor(
                             arguments,
-                            invokedMethod.getParameterCount(),
+                            invokedMethod.getParameterTypes().length,
                             invokedMethod.isVarArgs()),
                     RealMethod.IsIllegal.INSTANCE);
         }

@@ -30,7 +30,8 @@ public class DefaultInvocationFactory implements InvocationFactory {
                 settings,
                 method,
                 superMethod,
-                new ArgumentsProcessor(args, method.getParameterCount(), method.isVarArgs()));
+                new ArgumentsProcessor(
+                        args, method.getParameterTypes().length, method.isVarArgs()));
     }
 
     @Override
@@ -46,7 +47,8 @@ public class DefaultInvocationFactory implements InvocationFactory {
                 settings,
                 method,
                 superMethod,
-                new ArgumentsProcessor(args, method.getParameterCount(), method.isVarArgs()));
+                new ArgumentsProcessor(
+                        args, method.getParameterTypes().length, method.isVarArgs()));
     }
 
     private Invocation createInvocation(
