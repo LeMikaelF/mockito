@@ -25,7 +25,12 @@ public class DefaultInvocationFactory implements InvocationFactory {
             final Callable realMethod,
             Object... args) {
         RealMethod superMethod = new RealMethod.FromCallable(realMethod);
-        return createInvocation(target, settings, method, superMethod, args);
+        return createInvocation(
+                target,
+                settings,
+                method,
+                superMethod,
+                new ArgumentsProcessor(args, method.getParameterCount(), method.isVarArgs()));
     }
 
     @Override
@@ -36,7 +41,12 @@ public class DefaultInvocationFactory implements InvocationFactory {
             RealMethodBehavior realMethod,
             Object... args) {
         RealMethod superMethod = new RealMethod.FromBehavior(realMethod);
-        return createInvocation(target, settings, method, superMethod, args);
+        return createInvocation(
+                target,
+                settings,
+                method,
+                superMethod,
+                new ArgumentsProcessor(args, method.getParameterCount(), method.isVarArgs()));
     }
 
     private Invocation createInvocation(
@@ -44,34 +54,25 @@ public class DefaultInvocationFactory implements InvocationFactory {
             MockCreationSettings settings,
             Method method,
             RealMethod superMethod,
-            Object[] args) {
-        return createInvocation(target, method, args, superMethod, settings);
+            ArgumentsProcessor argumentsProcessor) {
+        return createInvocation(
+                target, method, argumentsProcessor, superMethod, settings, new LocationImpl());
     }
 
     public static InterceptedInvocation createInvocation(
             Object mock,
             Method invokedMethod,
-            Object[] arguments,
+            ArgumentsProcessor argumentsProcessor,
             RealMethod realMethod,
             MockCreationSettings settings,
             Location location) {
         return new InterceptedInvocation(
                 new MockWeakReference<Object>(mock),
                 createMockitoMethod(invokedMethod, settings),
-                arguments,
+                argumentsProcessor,
                 realMethod,
                 location,
                 SequenceNumber.next());
-    }
-
-    private static InterceptedInvocation createInvocation(
-            Object mock,
-            Method invokedMethod,
-            Object[] arguments,
-            RealMethod realMethod,
-            MockCreationSettings settings) {
-        return createInvocation(
-                mock, invokedMethod, arguments, realMethod, settings, new LocationImpl());
     }
 
     private static MockitoMethod createMockitoMethod(Method method, MockCreationSettings settings) {

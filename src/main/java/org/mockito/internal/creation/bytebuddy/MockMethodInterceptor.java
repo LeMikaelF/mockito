@@ -6,7 +6,9 @@ package org.mockito.internal.creation.bytebuddy;
 
 import net.bytebuddy.implementation.bind.annotation.*;
 import org.mockito.internal.debugging.LocationImpl;
+import org.mockito.internal.invocation.ArgumentsProcessor;
 import org.mockito.internal.invocation.RealMethod;
+import org.mockito.internal.invocation.WithWeakReferenceHatch;
 import org.mockito.invocation.Location;
 import org.mockito.invocation.MockHandler;
 import org.mockito.mock.MockCreationSettings;
@@ -16,7 +18,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.concurrent.Callable;
 
 import static org.mockito.internal.invocation.DefaultInvocationFactory.createInvocation;
 
@@ -43,45 +44,39 @@ public class MockMethodInterceptor implements Serializable {
         weakReferenceHatch = new ThreadLocal<>();
     }
 
-    Object doIntercept(Object mock, Method invokedMethod, Object[] arguments, RealMethod realMethod)
+    Object doIntercept(
+            Object mock,
+            Method invokedMethod,
+            ArgumentsProcessor argumentsProcessor,
+            RealMethod realMethod)
             throws Throwable {
-        return doIntercept(mock, invokedMethod, arguments, realMethod, new LocationImpl());
+        return doIntercept(mock, invokedMethod, argumentsProcessor, realMethod, new LocationImpl());
     }
 
     Object doIntercept(
             Object mock,
             Method invokedMethod,
-            Object[] arguments,
+            ArgumentsProcessor argumentsProcessor,
             RealMethod realMethod,
             Location location)
             throws Throwable {
-        // If the currently dispatched method is used in a hot path, typically a tight loop and if
-        // the mock is not used after the currently dispatched method, the JVM might attempt a
-        // garbage collection of the mock instance even before the execution of the current
-        // method is completed. Since we only reference the mock weakly from hereon after to avoid
-        // leaking the instance, it might therefore be garbage collected before the
-        // handler.handle(...) method completes. Since the handler method expects the mock to be
-        // present while a method call onto the mock is dispatched, this can lead to the problem
-        // described in GitHub #1802.
-        //
-        // To avoid this problem, we distract the JVM JIT by escaping the mock instance to a thread
-        // local field for the duration of the handler's dispatch.
-        //
-        // When dropping support for Java 8, instead of this hatch we should use an explicit fence
-        // https://docs.oracle.com/javase/9/docs/api/java/lang/ref/Reference.html#reachabilityFence-java.lang.Object-
-        weakReferenceHatch.set(mock);
-        try {
-            return handler.handle(
-                    createInvocation(
-                            mock,
-                            invokedMethod,
-                            arguments,
-                            realMethod,
-                            mockCreationSettings,
-                            location));
-        } finally {
-            weakReferenceHatch.remove();
-        }
+        return new WithWeakReferenceHatch<>(
+                        mock,
+                        weakReferenceHatch,
+                        new WithWeakReferenceHatch.ThrowingSupplier<Object>() {
+                            @Override
+                            public Object get() throws Throwable {
+                                return handler.handle(
+                                        createInvocation(
+                                                mock,
+                                                invokedMethod,
+                                                argumentsProcessor,
+                                                realMethod,
+                                                mockCreationSettings,
+                                                location));
+                            }
+                        })
+                .get();
     }
 
     public MockHandler getMockHandler() {
@@ -157,17 +152,16 @@ public class MockMethodInterceptor implements Serializable {
             if (interceptor == null) {
                 return morph.call(arguments);
             }
+            ArgumentsProcessor argumentsProcessor =
+                    new ArgumentsProcessor(
+                            arguments,
+                            invokedMethod.getParameterCount(),
+                            invokedMethod.isVarArgs());
             return interceptor.doIntercept(
                     mock,
                     invokedMethod,
-                    arguments,
-                    new RealMethod.FromCallable(
-                            new SerializableCallable() {
-                                @Override
-                                public Object call() throws Exception {
-                                    return morph.call(arguments);
-                                }
-                            }));
+                    argumentsProcessor,
+                    new RealMethodWithArguments(morph, argumentsProcessor));
         }
 
         @SuppressWarnings("unused")
@@ -184,13 +178,44 @@ public class MockMethodInterceptor implements Serializable {
                 return stubValue;
             }
             return interceptor.doIntercept(
-                    mock, invokedMethod, arguments, RealMethod.IsIllegal.INSTANCE);
+                    mock,
+                    invokedMethod,
+                    new ArgumentsProcessor(
+                            arguments,
+                            invokedMethod.getParameterCount(),
+                            invokedMethod.isVarArgs()),
+                    RealMethod.IsIllegal.INSTANCE);
         }
 
         public interface Morphable {
             Object call(Object[] args);
         }
+    }
 
-        interface SerializableCallable extends Callable, Serializable {}
+    public static class RealMethodWithArguments implements RealMethod, Serializable {
+
+        private final DispatcherDefaultingToRealMethod.Morphable morphable;
+        private final ArgumentsProcessor argumentConverter;
+
+        public RealMethodWithArguments(
+                DispatcherDefaultingToRealMethod.Morphable morphable,
+                ArgumentsProcessor argumentConverter) {
+            this.morphable = morphable;
+            this.argumentConverter = argumentConverter;
+        }
+
+        @Override
+        public boolean isInvokable() {
+            return true;
+        }
+
+        @Override
+        public Object invoke() throws Throwable {
+            return morphable.call(prepareExpandedArgumentsForMorphable());
+        }
+
+        private Object[] prepareExpandedArgumentsForMorphable() {
+            return argumentConverter.toContractedArgs();
+        }
     }
 }

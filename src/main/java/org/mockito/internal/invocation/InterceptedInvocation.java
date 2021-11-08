@@ -46,8 +46,29 @@ public class InterceptedInvocation implements Invocation, VerificationAwareInvoc
             int sequenceNumber) {
         this.mockRef = mockRef;
         this.mockitoMethod = mockitoMethod;
-        this.arguments = ArgumentsProcessor.expandArgs(mockitoMethod, arguments);
+        this.arguments =
+                new ArgumentsProcessor(
+                                arguments,
+                                mockitoMethod.getParameterTypes().length,
+                                mockitoMethod.isVarArgs())
+                        .toExpandedArgs();
         this.rawArguments = arguments;
+        this.realMethod = realMethod;
+        this.location = location;
+        this.sequenceNumber = sequenceNumber;
+    }
+
+    public InterceptedInvocation(
+            MockReference<Object> mockRef,
+            MockitoMethod mockitoMethod,
+            ArgumentsProcessor argumentsProcessor,
+            RealMethod realMethod,
+            Location location,
+            int sequenceNumber) {
+        this.mockRef = mockRef;
+        this.mockitoMethod = mockitoMethod;
+        this.arguments = argumentsProcessor.toExpandedArgs();
+        this.rawArguments = argumentsProcessor.getRawArguments();
         this.realMethod = realMethod;
         this.location = location;
         this.sequenceNumber = sequenceNumber;

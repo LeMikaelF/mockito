@@ -4,6 +4,7 @@
  */
 package org.mockito.internal.invocation;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,17 +14,27 @@ import org.mockito.internal.matchers.ArrayEquals;
 import org.mockito.internal.matchers.Equals;
 
 /** by Szczepan Faber, created at: 3/31/12 */
-public final class ArgumentsProcessor {
-    // drops hidden synthetic parameters (last continuation parameter from Kotlin suspending
-    // functions)
-    // and expands varargs
-    public static Object[] expandArgs(MockitoMethod method, Object[] args) {
-        int nParams = method.getParameterTypes().length;
-        if (args != null && args.length > nParams) {
-            args = Arrays.copyOf(args, nParams);
-        } // drop extra args (currently -- Kotlin continuation synthetic
-        // arg)
-        return expandVarArgs(method.isVarArgs(), args);
+public class ArgumentsProcessor implements Serializable {
+
+    private final Object[] arguments;
+    private final int parameterCount;
+    private final boolean isVarArgs;
+
+    public ArgumentsProcessor(Object[] arguments, int parameterCount, boolean isVarArgs) {
+        this.arguments = arguments;
+        this.parameterCount = parameterCount;
+        this.isVarArgs = isVarArgs;
+    }
+
+    public Object[] toExpandedArgs() {
+        {
+            Object[] newArguments = arguments;
+            if (arguments != null && arguments.length > parameterCount) {
+                newArguments = Arrays.copyOf(arguments, parameterCount);
+            } // drop extra arguments (currently -- Kotlin continuation synthetic
+            // arg)
+            return ArgumentsProcessor.expandVarArgs(isVarArgs, newArguments);
+        }
     }
 
     // expands array varArgs that are given by runtime (1, [a, b]) into true
@@ -66,5 +77,24 @@ public final class ArgumentsProcessor {
         return matchers;
     }
 
-    private ArgumentsProcessor() {}
+    public Object[] toContractedArgs() {
+        if (!isVarArgs) {
+            return arguments;
+        }
+
+        Object[] contractedArgs = new Object[parameterCount];
+        int nonVarArgsCount = arguments.length - parameterCount;
+        System.arraycopy(arguments, 0, contractedArgs, 0, nonVarArgsCount);
+        Object[] onlyVarArgs = new Object[arguments.length - nonVarArgsCount];
+
+        System.arraycopy(
+                arguments, nonVarArgsCount, onlyVarArgs, 0, arguments.length - nonVarArgsCount);
+
+        contractedArgs[contractedArgs.length - 1] = onlyVarArgs;
+        return contractedArgs;
+    }
+
+    public Object[] getRawArguments() {
+        return arguments;
+    }
 }

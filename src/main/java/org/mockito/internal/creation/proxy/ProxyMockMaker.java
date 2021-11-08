@@ -6,6 +6,7 @@ package org.mockito.internal.creation.proxy;
 
 import org.mockito.exceptions.base.MockitoException;
 import org.mockito.internal.debugging.LocationImpl;
+import org.mockito.internal.invocation.ArgumentsProcessor;
 import org.mockito.internal.invocation.RealMethod;
 import org.mockito.internal.util.Platform;
 import org.mockito.invocation.MockHandler;
@@ -153,7 +154,13 @@ public class ProxyMockMaker implements MockMaker {
             return handler.get()
                     .handle(
                             createInvocation(
-                                    proxy, method, args, realMethod, settings, new LocationImpl()));
+                                    proxy,
+                                    method,
+                                    new ArgumentsProcessor(
+                                            args, method.getParameterCount(), method.isVarArgs()),
+                                    realMethod,
+                                    settings,
+                                    new LocationImpl()));
         }
     }
 

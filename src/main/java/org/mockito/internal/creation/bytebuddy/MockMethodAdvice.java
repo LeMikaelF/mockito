@@ -49,6 +49,7 @@ import org.mockito.internal.configuration.plugins.Plugins;
 import org.mockito.internal.creation.bytebuddy.inject.MockMethodDispatcher;
 import org.mockito.internal.debugging.LocationImpl;
 import org.mockito.internal.exceptions.stacktrace.ConditionalStackTraceFilter;
+import org.mockito.internal.invocation.ArgumentsProcessor;
 import org.mockito.internal.invocation.RealMethod;
 import org.mockito.internal.invocation.SerializableMethod;
 import org.mockito.internal.invocation.mockref.MockReference;
@@ -151,7 +152,8 @@ public class MockMethodAdvice extends MockMethodDispatcher {
                 interceptor.doIntercept(
                         instance,
                         origin,
-                        arguments,
+                        new ArgumentsProcessor(
+                                arguments, origin.getParameterTypes().length, origin.isVarArgs()),
                         realMethod,
                         new LocationImpl(new Throwable(), true)));
     }
@@ -169,7 +171,10 @@ public class MockMethodAdvice extends MockMethodDispatcher {
                         .doIntercept(
                                 type,
                                 origin,
-                                arguments,
+                                new ArgumentsProcessor(
+                                        arguments,
+                                        origin.getParameterTypes().length,
+                                        origin.isVarArgs()),
                                 new StaticMethodCall(selfCallInfo, type, origin, arguments),
                                 new LocationImpl(new Throwable(), true)));
     }
